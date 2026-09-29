@@ -1,0 +1,8 @@
+{
+  "name": "BTG Cricket",
+  "description": "Comprehensive cricket tournament and match management platform featuring live ball-by-ball scoring, real-time match tracking, full scorecards, tournament standings, and player statistics.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
