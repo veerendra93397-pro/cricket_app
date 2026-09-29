@@ -1,0 +1,57 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Keep this in sync with utils/admin_helper.dart's adminEmails list.
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email.lower() == 'admin@gmail.com';
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Matches: everyone signed in can view (schedule, live score, results).
+    // Only the admin can create/update/delete matches or push live score updates.
+    match /matches/{matchId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Teams: everyone signed in can view. Only admin manages teams.
+    match /teams/{teamId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Tournaments & points tables: everyone signed in can view. Only admin edits.
+    match /tournaments/{tournamentId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Player stats (runs, wickets, etc.): everyone signed in can view.
+    // Only admin writes (usually updated automatically during live scoring).
+    match /playerStats/{statId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Player profiles: everyone signed in can view the roster.
+    // A user can create/edit their OWN profile (player registration / my profile).
+    // Admin can create/edit any player profile (e.g. adding players to a team).
+    match /players/{playerId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == playerId);
+    }
+
+    // App user/role docs: a user can create/read their own doc. Admin can read/write any.
+    match /users/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+  }
+}
