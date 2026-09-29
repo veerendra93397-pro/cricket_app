@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { useCricket } from '../context/CricketContext';
 import { Header } from '../components/common/Header';
 import { InitialAvatar, AppCard } from '../components/common/AppWidgets';
-import { Plus, Search, ChevronRight, Edit3 } from 'lucide-react';
+import { Plus, Search, ChevronRight, Edit3, ArrowRightLeft } from 'lucide-react';
 import type { PlayerRole } from '../types';
 import { PlayerPerformanceTrend } from '../components/player/PlayerPerformanceTrend';
+import { PlayerComparisonModal } from '../components/player/PlayerComparisonModal';
 
 export const PlayersScreen: React.FC = () => {
   const { players, isAdmin, navigateTo, goBack } = useCricket();
@@ -120,6 +121,7 @@ export const PlayerDetailsScreen: React.FC = () => {
   const { players, screenParams, goBack } = useCricket();
   const playerId = screenParams?.playerId;
   const player = players.find((p) => p.uid === playerId);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
 
   if (!player) {
     return (
@@ -132,7 +134,22 @@ export const PlayerDetailsScreen: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#F4F7F5] pb-16">
-      <Header title="PLAYER PROFILE" showBack onBack={goBack} />
+      <Header
+        title="PLAYER PROFILE"
+        showBack
+        onBack={goBack}
+        actions={
+          <button
+            type="button"
+            onClick={() => setIsCompareOpen(true)}
+            className="px-3 py-1.5 bg-[#00C853] hover:bg-[#00A94D] text-[#0B3D2E] rounded-xl flex items-center gap-1.5 text-xs font-black transition-all shadow-xs cursor-pointer active:scale-95"
+            title="Compare with another player"
+          >
+            <ArrowRightLeft className="w-3.5 h-3.5" />
+            <span>Compare</span>
+          </button>
+        }
+      />
 
       {/* Hero profile card */}
       <div className="bg-gradient-to-r from-[#06251C] to-[#14764E] text-white py-8 px-4 text-center shadow-md">
@@ -148,6 +165,18 @@ export const PlayerDetailsScreen: React.FC = () => {
         <span className="inline-block bg-white/15 px-3 py-1 rounded-full text-xs font-bold text-white mt-2">
           {player.teamName}
         </span>
+
+        {/* Quick Compare action button */}
+        <div className="mt-3.5 flex items-center justify-center">
+          <button
+            type="button"
+            onClick={() => setIsCompareOpen(true)}
+            className="px-4 py-2 bg-white/15 hover:bg-white/25 active:scale-95 text-white rounded-xl text-xs font-black flex items-center gap-2 transition-all cursor-pointer backdrop-blur-xs border border-white/20 shadow-xs"
+          >
+            <ArrowRightLeft className="w-3.5 h-3.5 text-[#00C853]" />
+            <span>Compare Player Stats</span>
+          </button>
+        </div>
       </div>
 
       <main className="max-w-xl mx-auto px-4 py-5 space-y-4">
@@ -199,6 +228,14 @@ export const PlayerDetailsScreen: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Head-to-Head Player Comparison Modal */}
+      <PlayerComparisonModal
+        currentPlayer={player}
+        allPlayers={players}
+        isOpen={isCompareOpen}
+        onClose={() => setIsCompareOpen(false)}
+      />
     </div>
   );
 };
