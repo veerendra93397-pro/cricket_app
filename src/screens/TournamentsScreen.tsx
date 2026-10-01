@@ -10,8 +10,10 @@ import {
   ChevronRight,
   Edit,
   Trash2,
+  Share2,
 } from '../components/Icons';
 import { EditTournamentModal, DeleteTournamentModal } from '../components/common/TournamentModals';
+import { ShareTournamentModal } from '../components/tournament/ShareTournamentModal';
 import type { TournamentModel } from '../types';
 
 export const TournamentsScreen: React.FC = () => {
@@ -192,6 +194,7 @@ export const TournamentDetailsScreen: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'points' | 'matches' | 'runs' | 'wickets'>('points');
   const [editingTournament, setEditingTournament] = useState<TournamentModel | null>(null);
   const [deleteConfirmTournament, setDeleteConfirmTournament] = useState<TournamentModel | null>(null);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   if (!tournament) {
     return (
@@ -243,28 +246,39 @@ export const TournamentDetailsScreen: React.FC = () => {
         showBack
         onBack={goBack}
         actions={
-          isAdmin ? (
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setEditingTournament(tournament)}
-                className="px-2.5 py-1.5 bg-[#00C853] hover:bg-[#00A94D] text-[#0B3D2E] rounded-xl flex items-center gap-1.5 text-xs font-black transition-all shadow-xs cursor-pointer active:scale-95"
-                title="Edit Tournament Settings"
-              >
-                <Edit className="w-3.5 h-3.5" />
-                <span>Edit Cup</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setDeleteConfirmTournament(tournament)}
-                className="px-2.5 py-1.5 bg-[#E53935] hover:bg-[#D32F2F] text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
-                title="Delete Tournament"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete</span>
-              </button>
-            </div>
-          ) : null
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsShareModalOpen(true)}
+              className="px-2.5 py-1.5 bg-[#00C853] hover:bg-[#00A94D] text-[#0B3D2E] rounded-xl flex items-center gap-1.5 text-xs font-black transition-all shadow-xs cursor-pointer active:scale-95"
+              title="Share Tournament Standings"
+            >
+              <Share2 className="w-3.5 h-3.5 stroke-[2.5]" />
+              <span>Share</span>
+            </button>
+            {isAdmin && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setEditingTournament(tournament)}
+                  className="px-2.5 py-1.5 bg-white/15 hover:bg-white/25 text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                  title="Edit Tournament Settings"
+                >
+                  <Edit className="w-3.5 h-3.5" />
+                  <span>Edit Cup</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDeleteConfirmTournament(tournament)}
+                  className="px-2.5 py-1.5 bg-[#E53935] hover:bg-[#D32F2F] text-white rounded-xl flex items-center gap-1.5 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+                  title="Delete Tournament"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Delete</span>
+                </button>
+              </>
+            )}
+          </div>
         }
       />
 
@@ -334,6 +348,26 @@ export const TournamentDetailsScreen: React.FC = () => {
         {/* TAB 1: POINTS */}
         {activeTab === 'points' && (
           <div className="space-y-3">
+            {/* Standings Header with Quick Share */}
+            <div className="flex items-center justify-between bg-white rounded-2xl px-4 py-3 border border-[#E4EAE6] shadow-xs">
+              <div>
+                <h3 className="font-black text-xs sm:text-sm text-[#13201B] uppercase tracking-wider">
+                  League Standings Table
+                </h3>
+                <span className="text-[11px] text-[#5B6B63] block">
+                  Top 4 teams advance to the knockout playoffs
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(true)}
+                className="px-3 py-1.5 bg-[#00C853]/15 hover:bg-[#00C853]/25 text-[#00873D] rounded-xl flex items-center gap-1.5 text-xs font-black transition-all cursor-pointer active:scale-95 shrink-0"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Share Table</span>
+              </button>
+            </div>
+
             <div className="bg-white rounded-3xl p-4 shadow-sm border border-[#E4EAE6] overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
@@ -509,6 +543,16 @@ export const TournamentDetailsScreen: React.FC = () => {
           onConfirm={handleDeleteTournament}
         />
       )}
+
+      {/* Share Tournament Standings Modal */}
+      <ShareTournamentModal
+        tournament={tournament}
+        pointsEntries={pointsEntries}
+        topBatsman={mostRuns[0]}
+        topBowler={mostWickets[0]}
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+      />
     </div>
   );
 };

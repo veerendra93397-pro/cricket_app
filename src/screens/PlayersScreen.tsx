@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useCricket } from '../context/CricketContext';
 import { Header } from '../components/common/Header';
 import { InitialAvatar, AppCard } from '../components/common/AppWidgets';
-import { Plus, Search, ChevronRight, Edit3, ArrowRightLeft } from 'lucide-react';
+import { Plus, Search, ChevronRight, Edit3, ArrowRightLeft, Trash2 } from 'lucide-react';
 import type { PlayerRole } from '../types';
 import { PlayerPerformanceTrend } from '../components/player/PlayerPerformanceTrend';
 import { PlayerComparisonModal } from '../components/player/PlayerComparisonModal';
+import { CareerSummaryCard } from '../components/player/CareerSummaryCard';
 
 export const PlayersScreen: React.FC = () => {
-  const { players, isAdmin, navigateTo, goBack } = useCricket();
+  const { players, isAdmin, navigateTo, goBack, deletePlayer } = useCricket();
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('All');
 
@@ -102,6 +103,21 @@ export const PlayersScreen: React.FC = () => {
                       {player.totalWickets || 0} Wkts
                     </span>
                   </div>
+                  {isAdmin && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (window.confirm(`Are you sure you want to remove player "${player.playerName}"?`)) {
+                          deletePlayer(player.uid);
+                        }
+                      }}
+                      className="p-1.5 text-[#E53935] hover:bg-[#E53935]/10 rounded-lg transition-colors cursor-pointer"
+                      title="Remove Player"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                   <ChevronRight className="w-4 h-4 text-[#8A978F]" />
                 </div>
               </AppCard>
@@ -118,7 +134,7 @@ export const PlayersScreen: React.FC = () => {
 };
 
 export const PlayerDetailsScreen: React.FC = () => {
-  const { players, screenParams, goBack } = useCricket();
+  const { players, screenParams, goBack, deletePlayer, navigateTo } = useCricket();
   const playerId = screenParams?.playerId;
   const player = players.find((p) => p.uid === playerId);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
@@ -132,6 +148,13 @@ export const PlayerDetailsScreen: React.FC = () => {
     );
   }
 
+  const handleDeletePlayer = async () => {
+    if (window.confirm(`Are you sure you want to remove player "${player.playerName}"?`)) {
+      await deletePlayer(player.uid);
+      navigateTo('players');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F4F7F5] pb-16">
       <Header
@@ -139,15 +162,26 @@ export const PlayerDetailsScreen: React.FC = () => {
         showBack
         onBack={goBack}
         actions={
-          <button
-            type="button"
-            onClick={() => setIsCompareOpen(true)}
-            className="px-3 py-1.5 bg-[#00C853] hover:bg-[#00A94D] text-[#0B3D2E] rounded-xl flex items-center gap-1.5 text-xs font-black transition-all shadow-xs cursor-pointer active:scale-95"
-            title="Compare with another player"
-          >
-            <ArrowRightLeft className="w-3.5 h-3.5" />
-            <span>Compare</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsCompareOpen(true)}
+              className="px-2.5 py-1.5 bg-[#00C853] hover:bg-[#00A94D] text-[#0B3D2E] rounded-xl flex items-center gap-1 text-xs font-black transition-all shadow-xs cursor-pointer active:scale-95"
+              title="Compare with another player"
+            >
+              <ArrowRightLeft className="w-3.5 h-3.5" />
+              <span>Compare</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleDeletePlayer}
+              className="px-2.5 py-1.5 bg-[#E53935]/90 hover:bg-[#E53935] text-white rounded-xl flex items-center gap-1 text-xs font-bold transition-all shadow-xs cursor-pointer active:scale-95"
+              title="Remove this player"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Remove</span>
+            </button>
+          </div>
         }
       />
 
@@ -180,31 +214,8 @@ export const PlayerDetailsScreen: React.FC = () => {
       </div>
 
       <main className="max-w-xl mx-auto px-4 py-5 space-y-4">
-        {/* Key Stats Grid */}
-        <div className="bg-white rounded-3xl p-5 shadow-sm border border-[#E4EAE6]">
-          <h3 className="font-black text-sm text-[#13201B] uppercase tracking-wider mb-4">
-            Career Statistics
-          </h3>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-[#EFF3F0] p-3.5 rounded-2xl text-center">
-              <span className="text-xs text-[#5B6B63] font-bold block mb-1">Total Runs</span>
-              <span className="text-2xl font-black text-[#0B3D2E]">{player.totalRuns || 0}</span>
-            </div>
-            <div className="bg-[#EFF3F0] p-3.5 rounded-2xl text-center">
-              <span className="text-xs text-[#5B6B63] font-bold block mb-1">Total Wickets</span>
-              <span className="text-2xl font-black text-[#E53935]">{player.totalWickets || 0}</span>
-            </div>
-            <div className="bg-[#EFF3F0] p-3.5 rounded-2xl text-center">
-              <span className="text-xs text-[#5B6B63] font-bold block mb-1">High Score</span>
-              <span className="text-2xl font-black text-[#FFB300]">{player.highScore || 0}</span>
-            </div>
-            <div className="bg-[#EFF3F0] p-3.5 rounded-2xl text-center">
-              <span className="text-xs text-[#5B6B63] font-bold block mb-1">Overs Bowled</span>
-              <span className="text-2xl font-black text-[#13201B]">{player.oversBowled || 0}</span>
-            </div>
-          </div>
-        </div>
+        {/* Career Summary Card with Aggregated Historical Stats Grid */}
+        <CareerSummaryCard player={player} />
 
         {/* Recharts Performance Trends (Batting Avg, Strike Rate, Bowling SR) */}
         <PlayerPerformanceTrend player={player} />

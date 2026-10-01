@@ -30,12 +30,15 @@ export const Header: React.FC<{
     navigateTo(screen);
   };
 
-  const displayName = isAdmin
-    ? (currentUser?.displayName && currentUser.displayName !== 'Rohit Sharma' && currentUser.displayName !== 'Player'
-        ? currentUser.displayName
-        : 'Tournament Admin')
-    : (currentUser?.displayName || playerProfile?.playerName || 'Player');
-  const displayEmail = currentUser?.email || 'guest@btg.com';
+  const isGuest = !currentUser;
+  const displayName = currentUser
+    ? (isAdmin
+        ? (currentUser.displayName && currentUser.displayName !== 'Rohit Sharma' && currentUser.displayName !== 'Player'
+            ? currentUser.displayName
+            : 'Tournament Admin')
+        : (currentUser.displayName || playerProfile?.playerName || 'Player'))
+    : 'Guest Visitor';
+  const displayEmail = currentUser?.email || 'Sign in to access all features';
 
   return (
     <>
@@ -120,7 +123,7 @@ export const Header: React.FC<{
             {/* Header profile area */}
             <div className="bg-gradient-to-br from-[#06251C] via-[#0B3D2E] to-[#0F5238] p-5 text-white">
               <div className="flex items-center justify-between mb-4">
-                <InitialAvatar text={displayName} size={56} className="ring-2 ring-[#FFB300]" />
+                <InitialAvatar text={isGuest ? 'Guest' : displayName} size={56} className="ring-2 ring-[#FFB300]" />
                 <button
                   onClick={() => setDrawerOpen(false)}
                   className="p-1 text-white/70 hover:text-white rounded-lg hover:bg-white/10"

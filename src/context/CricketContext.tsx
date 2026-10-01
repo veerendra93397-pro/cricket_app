@@ -34,6 +34,7 @@ interface CricketContextType {
   addTeam: (team: Omit<Team, 'id'>) => Promise<string>;
   addPlayer: (player: Omit<PlayerModel, 'uid'>) => Promise<string>;
   updatePlayer: (uid: string, data: Partial<PlayerModel>) => Promise<void>;
+  deletePlayer: (uid: string) => Promise<void>;
   addMatch: (match: Omit<MatchModel, 'id'>) => Promise<string>;
   updateMatch: (matchId: string, updates: Partial<MatchModel>) => Promise<void>;
   deleteMatch: (matchId: string) => Promise<void>;
@@ -85,14 +86,14 @@ const CricketContext = createContext<CricketContextType | undefined>(undefined);
 
 // Initial mock data mirroring the BTG Cricket Firestore collections
 const INITIAL_TEAMS: Team[] = [
-  { id: 'team-1', teamName: 'BTG Warriors', captain: 'Rohit Sharma', playerCount: 11, logoUrl: '' },
+  { id: 'team-1', teamName: 'BTG Warriors', captain: 'Rahul Sharma', playerCount: 11, logoUrl: '' },
   { id: 'team-2', teamName: 'Royal Challengers', captain: 'Virat Kohli', playerCount: 11, logoUrl: '' },
   { id: 'team-3', teamName: 'Super Kings', captain: 'MS Dhoni', playerCount: 11, logoUrl: '' },
   { id: 'team-4', teamName: 'Knight Riders', captain: 'Shreyas Iyer', playerCount: 10, logoUrl: '' },
 ];
 
 const INITIAL_PLAYERS: PlayerModel[] = [
-  { uid: 'p-1', playerName: 'Rohit Sharma', email: 'rohit@btg.com', age: 36, jerseyNumber: 45, role: 'Batsman', teamName: 'BTG Warriors', totalRuns: 420, totalBalls: 310, totalWickets: 2, oversBowled: 4, highScore: 104 },
+  { uid: 'p-1', playerName: 'Rahul Sharma', email: 'rahul@btg.com', age: 32, jerseyNumber: 45, role: 'Batsman', teamName: 'BTG Warriors', totalRuns: 420, totalBalls: 310, totalWickets: 2, oversBowled: 4, highScore: 104 },
   { uid: 'p-2', playerName: 'KL Rahul', email: 'kl@btg.com', age: 31, jerseyNumber: 1, role: 'Wicket-Keeper', teamName: 'BTG Warriors', totalRuns: 380, totalBalls: 290, totalWickets: 0, oversBowled: 0, highScore: 88 },
   { uid: 'p-3', playerName: 'Hardik Pandya', email: 'hardik@btg.com', age: 30, jerseyNumber: 33, role: 'All-Rounder', teamName: 'BTG Warriors', totalRuns: 280, totalBalls: 180, totalWickets: 12, oversBowled: 28, highScore: 62 },
   { uid: 'p-4', playerName: 'Jasprit Bumrah', email: 'bumrah@btg.com', age: 30, jerseyNumber: 93, role: 'Bowler', teamName: 'BTG Warriors', totalRuns: 34, totalBalls: 28, totalWickets: 18, oversBowled: 36, bestBowling: '4/14' },
@@ -172,7 +173,7 @@ const INITIAL_MATCHES: MatchModel[] = [
       { name: 'Hardik Pandya', overs: '4.0', maidens: 0, runs: 38, wickets: 2 },
     ],
     currentBatsmen: [
-      { name: 'Rohit Sharma', runs: 68, balls: 44, fours: 6, sixes: 3, isOnStrike: true },
+      { name: 'Rahul Sharma', runs: 68, balls: 44, fours: 6, sixes: 3, isOnStrike: true },
       { name: 'Suryakumar Yadav', runs: 45, balls: 26, fours: 4, sixes: 2, isOnStrike: false },
     ],
     currentBowler: {
@@ -255,7 +256,7 @@ const INITIAL_MATCHES: MatchModel[] = [
     firstInningsScore: '185/4',
     firstInningsOvers: '20.0',
     firstInningsBatsmen: [
-      { name: 'Rohit Sharma', runs: 82, balls: 48, fours: 8, sixes: 4 },
+      { name: 'Rahul Sharma', runs: 82, balls: 48, fours: 8, sixes: 4 },
       { name: 'Suryakumar Yadav', runs: 58, balls: 32, fours: 5, sixes: 3 },
     ],
     firstInningsBowlers: [
@@ -275,6 +276,13 @@ const INITIAL_MATCHES: MatchModel[] = [
     currentBowler: null,
     bowlersHistory: [],
     recentBalls: [],
+    playerOfTheMatch: 'Jasprit Bumrah',
+    playerOfTheMatchDetails: {
+      name: 'Jasprit Bumrah',
+      team: 'BTG Warriors',
+      performanceSummary: '4/18 (4.0 ov, 1 maiden)',
+      citation: 'Match-winning lethal spell in defence of total',
+    },
   },
 ];
 
@@ -306,6 +314,9 @@ export const CricketProvider: React.FC<{ children: React.ReactNode }> = ({ child
         if (parsed.isAdmin && (!parsed.displayName || parsed.displayName === 'Rohit Sharma' || parsed.displayName === 'Admin Scorer')) {
           parsed.displayName = 'Tournament Admin';
         }
+        if (!parsed.isAdmin && parsed.displayName === 'Rohit Sharma') {
+          parsed.displayName = 'Rahul Sharma';
+        }
         return parsed;
       } catch {}
     }
@@ -317,7 +328,12 @@ export const CricketProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const saved = localStorage.getItem('btg_player_profile');
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (parsed.playerName === 'Rohit Sharma') {
+          parsed.playerName = 'Rahul Sharma';
+          parsed.email = 'rahul@btg.com';
+        }
+        return parsed;
       } catch {}
     }
     return null;
@@ -325,12 +341,24 @@ export const CricketProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const [teams, setTeams] = useState<Team[]>(() => {
     const saved = localStorage.getItem('btg_teams');
-    return saved ? JSON.parse(saved) : INITIAL_TEAMS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((t: Team) => (t.captain === 'Rohit Sharma' ? { ...t, captain: 'Rahul Sharma' } : t));
+      } catch {}
+    }
+    return INITIAL_TEAMS;
   });
 
   const [players, setPlayers] = useState<PlayerModel[]>(() => {
     const saved = localStorage.getItem('btg_players');
-    return saved ? JSON.parse(saved) : INITIAL_PLAYERS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((p: PlayerModel) => (p.playerName === 'Rohit Sharma' ? { ...p, playerName: 'Rahul Sharma', email: 'rahul@btg.com' } : p));
+      } catch {}
+    }
+    return INITIAL_PLAYERS;
   });
 
   const [matches, setMatches] = useState<MatchModel[]>(() => {
@@ -662,7 +690,7 @@ export const CricketProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const playerUser: UserProfile = {
         uid: 'player-1',
         email: 'player@btgcricket.com',
-        displayName: 'Rohit Sharma',
+        displayName: 'Rahul Sharma',
         isAdmin: false,
       };
       setCurrentUser(playerUser);
@@ -736,6 +764,18 @@ export const CricketProvider: React.FC<{ children: React.ReactNode }> = ({ child
     setPlayers((prev) => prev.map((p) => (p.uid === uid ? { ...p, ...data } : p)));
     if (playerProfile?.uid === uid) {
       setPlayerProfile((prev) => (prev ? { ...prev, ...data } : null));
+    }
+  };
+
+  const deletePlayer = async (uid: string) => {
+    setPlayers((prev) => {
+      const updated = prev.filter((p) => p.uid !== uid);
+      localStorage.setItem('btg_players', JSON.stringify(updated));
+      return updated;
+    });
+    if (playerProfile?.uid === uid) {
+      setPlayerProfile(null);
+      localStorage.removeItem('btg_player_profile');
     }
   };
 
@@ -1305,6 +1345,7 @@ export const CricketProvider: React.FC<{ children: React.ReactNode }> = ({ child
         addTeam,
         addPlayer,
         updatePlayer,
+        deletePlayer,
         addMatch,
         updateMatch,
         deleteMatch,

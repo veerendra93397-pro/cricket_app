@@ -144,9 +144,9 @@ export const INITIAL_PLAYERS: PlayerModel[] = [
   // Mumbai Titans
   {
     uid: 'p-13',
-    playerName: 'Rohit Sharma',
-    email: 'rohit@cricket.org',
-    age: 37,
+    playerName: 'Rahul Sharma',
+    email: 'rahul@cricket.org',
+    age: 32,
     jerseyNumber: 45,
     role: 'Batsman',
     teamName: 'Mumbai Titans',
@@ -371,7 +371,7 @@ export const INITIAL_MATCHES: MatchModel[] = [
     secondInningsScore: '160/8',
     secondInningsOvers: '20.0',
     secondInningsBatsmen: [
-      { name: 'Rohit Sharma', runs: 42, balls: 28, fours: 5, sixes: 2, isOnStrike: false, howOut: 'c Pant b Shami' },
+      { name: 'Rahul Sharma', runs: 42, balls: 28, fours: 5, sixes: 2, isOnStrike: false, howOut: 'c Pant b Shami' },
       { name: 'Suryakumar Yadav', runs: 56, balls: 34, fours: 6, sixes: 2, isOnStrike: false, howOut: 'b Jadeja' }
     ]
   }

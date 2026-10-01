@@ -2,14 +2,17 @@ import React, { useState } from 'react';
 import { useCricket } from '../context/CricketContext';
 import { Header } from '../components/common/Header';
 import { calculateBowlerEconomy } from '../utils/cricTheme';
-import { Trophy } from 'lucide-react';
+import { Trophy, Award } from 'lucide-react';
+import { PlayerOfTheMatchCard } from '../components/match/PlayerOfTheMatchCard';
+import { PlayerOfTheMatchModal } from '../components/match/PlayerOfTheMatchModal';
 
 export const ScorecardScreen: React.FC = () => {
-  const { matches, screenParams, goBack } = useCricket();
+  const { matches, screenParams, goBack, isAdmin, updateMatch } = useCricket();
   const matchId = screenParams?.matchId;
   const match = matches.find((m) => m.id === matchId);
 
   const [activeTab, setActiveTab] = useState<1 | 2>(1);
+  const [isPotmModalOpen, setIsPotmModalOpen] = useState(false);
 
   if (!match) {
     return (
@@ -19,6 +22,25 @@ export const ScorecardScreen: React.FC = () => {
       </div>
     );
   }
+
+  const handleSavePotm = async (
+    name: string,
+    details: { name: string; team: string; performanceSummary: string; citation?: string }
+  ) => {
+    if (!match) return;
+    await updateMatch(match.id, {
+      playerOfTheMatch: name,
+      playerOfTheMatchDetails: details,
+    });
+  };
+
+  const handleRemovePotm = async () => {
+    if (!match) return;
+    await updateMatch(match.id, {
+      playerOfTheMatch: undefined,
+      playerOfTheMatchDetails: undefined,
+    });
+  };
 
   const inn1Team = match.firstInningsTeam || match.team1;
   const inn1Score = match.firstInningsScore || match.team1Score;
@@ -79,6 +101,15 @@ export const ScorecardScreen: React.FC = () => {
             </div>
           )}
         </div>
+
+        {/* Player of the Match Highlight Card */}
+        {(match.status === 'completed' || match.playerOfTheMatch) && (
+          <PlayerOfTheMatchCard
+            match={match}
+            onOpenSelector={() => setIsPotmModalOpen(true)}
+            canEdit={isAdmin}
+          />
+        )}
 
         {/* Tab switch */}
         <div className="flex bg-[#EFF3F0] p-1 rounded-xl">
@@ -190,6 +221,15 @@ export const ScorecardScreen: React.FC = () => {
           </div>
         </div>
       </main>
+
+      {/* Player of the Match Selector & Citation Modal */}
+      <PlayerOfTheMatchModal
+        match={match}
+        isOpen={isPotmModalOpen}
+        onClose={() => setIsPotmModalOpen(false)}
+        onSave={handleSavePotm}
+        onRemove={handleRemovePotm}
+      />
     </div>
   );
 };

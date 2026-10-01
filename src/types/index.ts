@@ -85,6 +85,13 @@ export interface MatchModel {
   currentBowler: BowlerData | null;
   bowlersHistory: BowlerData[];
   recentBalls: string[];
+  playerOfTheMatch?: string;
+  playerOfTheMatchDetails?: {
+    name: string;
+    team: string;
+    performanceSummary?: string;
+    citation?: string;
+  };
 }
 
 export interface TeamStanding {

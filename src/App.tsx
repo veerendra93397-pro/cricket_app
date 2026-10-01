@@ -62,6 +62,7 @@ const MainNavigator: React.FC = () => {
         return <LiveScoringInterface />;
       case 'live-score':
       case 'user-live-match':
+      case 'match-details':
         return <UserLiveMatchScreen />;
       case 'scorecard':
         return <ScorecardScreen />;

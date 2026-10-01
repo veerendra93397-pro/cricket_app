@@ -21,15 +21,19 @@ import {
   Activity,
   Flame,
   Layers,
+  Award,
 } from 'lucide-react';
+import { PlayerOfTheMatchCard } from '../components/match/PlayerOfTheMatchCard';
+import { PlayerOfTheMatchModal } from '../components/match/PlayerOfTheMatchModal';
 
 export const UserLiveMatchScreen: React.FC = () => {
-  const { matches, isAdmin, screenParams, navigateTo, goBack } = useCricket();
+  const { matches, isAdmin, screenParams, navigateTo, goBack, updateMatch } = useCricket();
   const matchId = screenParams?.matchId;
   const match = matches.find((m) => m.id === matchId);
 
   const [activeTab, setActiveTab] = useState<'info' | 'live' | 'scorecard' | 'commentary' | 'highlights'>('live');
   const [scorecardInnings, setScorecardInnings] = useState<1 | 2>(1);
+  const [isPotmModalOpen, setIsPotmModalOpen] = useState(false);
 
   if (!match) {
     return (
@@ -72,6 +76,25 @@ export const UserLiveMatchScreen: React.FC = () => {
     .map((ball, i) => ({ ball, index: i + 1 }))
     .filter((b) => b.ball === '4' || b.ball === '6' || b.ball === 'W');
 
+  const handleSavePotm = async (
+    name: string,
+    details: { name: string; team: string; performanceSummary: string; citation?: string }
+  ) => {
+    if (!match) return;
+    await updateMatch(match.id, {
+      playerOfTheMatch: name,
+      playerOfTheMatchDetails: details,
+    });
+  };
+
+  const handleRemovePotm = async () => {
+    if (!match) return;
+    await updateMatch(match.id, {
+      playerOfTheMatch: undefined,
+      playerOfTheMatchDetails: undefined,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-[#F4F7F5] pb-20">
       <Header
@@ -88,6 +111,16 @@ export const UserLiveMatchScreen: React.FC = () => {
               >
                 <Play className="w-3 h-3 fill-white" />
                 Scorer
+              </button>
+            )}
+            {isAdmin && (isCompleted || match.playerOfTheMatch) && (
+              <button
+                onClick={() => setIsPotmModalOpen(true)}
+                className="bg-[#FFB300] hover:bg-[#FFA000] text-[#06251C] px-2.5 py-1 rounded-lg text-xs font-black flex items-center gap-1 transition-all shadow-xs cursor-pointer active:scale-95"
+                title="Select Player of the Match"
+              >
+                <Award className="w-3.5 h-3.5" />
+                <span>POTM</span>
               </button>
             )}
           </div>
@@ -208,7 +241,16 @@ export const UserLiveMatchScreen: React.FC = () => {
         </div>
       </div>
 
-      <main className="max-w-3xl mx-auto px-4 py-4">
+      <main className="max-w-3xl mx-auto px-4 py-4 space-y-4">
+        {/* Highlighted Player of the Match Card */}
+        {(isCompleted || match.playerOfTheMatch) && (
+          <PlayerOfTheMatchCard
+            match={match}
+            onOpenSelector={() => setIsPotmModalOpen(true)}
+            canEdit={isAdmin}
+          />
+        )}
+
         {/* TAB 1: INFO */}
         {activeTab === 'info' && (
           <div className="space-y-4">
@@ -571,6 +613,15 @@ export const UserLiveMatchScreen: React.FC = () => {
           </div>
         )}
       </main>
+
+      {/* Player of the Match Selector & Citation Modal */}
+      <PlayerOfTheMatchModal
+        match={match}
+        isOpen={isPotmModalOpen}
+        onClose={() => setIsPotmModalOpen(false)}
+        onSave={handleSavePotm}
+        onRemove={handleRemovePotm}
+      />
     </div>
   );
 };

@@ -615,15 +615,27 @@ export const LiveScoringInterface: React.FC = () => {
             <p className="text-xs text-[#5B6B63] mb-5">
               Tournament standings and player records have been automatically updated.
             </p>
-            <button
-              onClick={() => {
-                setShowMatchEndModal(false);
-                navigateTo('matches');
-              }}
-              className="w-full py-3 bg-[#0B3D2E] hover:bg-[#093226] text-white font-black rounded-xl text-xs shadow-md"
-            >
-              VIEW COMPLETED MATCH
-            </button>
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  setShowMatchEndModal(false);
+                  navigateTo('user-live-match', { matchId: match.id });
+                }}
+                className="w-full py-3 bg-[#FFB300] hover:bg-[#FFA000] text-[#06251C] font-black rounded-xl text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-98"
+              >
+                <Trophy className="w-4 h-4" />
+                <span>Select Player of the Match</span>
+              </button>
+              <button
+                onClick={() => {
+                  setShowMatchEndModal(false);
+                  navigateTo('matches');
+                }}
+                className="w-full py-2.5 bg-[#EFF3F0] hover:bg-[#E4EAE6] text-[#5B6B63] font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Back to Matches
+              </button>
+            </div>
           </div>
         </div>
       )}
